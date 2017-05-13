@@ -63,14 +63,17 @@ let handleBid = function(socket, data) {
         return;
     }
 
+    // Successful user bid
+    user.coins -= gaame.next_bid;
     game.pool += game.next_bid;
     game.next_bid += game.increment;
     game.bidder_id = data.user_id;
     game.bidder_session = data.user_session;
 
-    // broadcast new game state
+    // Broadcast new game state
     let updated_game = createUserGame(game);
     socket.broadcast.emit('game_update', updated_game);
+    socket.emit('user_status', { "coins" : user.coins });
 };
 
 let last_id = 123;
