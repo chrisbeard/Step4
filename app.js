@@ -89,7 +89,7 @@ let createUser = function() {
 
 io.on('connection', function (socket) {
     let user = createUser();
-    let user_games = Object.values(games).map(createUserGame);
+    let user_games = Object.keys(games).map(k => games[k]).map(createUserGame);
 
     socket.emit('game_state', {
         "user" : user,
