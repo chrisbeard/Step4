@@ -9,16 +9,18 @@
 
 // Globals
 var user;
-var games;
+var games = {};
 var game_divs = {};
 
 var socket = io.connect('http://localhost:3000');
 socket.on('game_state', function (data) {
     console.log(data);
-    user = data.user;
-    games = data.games;
 
-    games.forEach(addGame);
+    user = data.user;
+    data.games.forEach(game => {
+        games[game.id] = game;
+        addGame(game);
+    });
 });
 
 function addGame(game) {
@@ -41,6 +43,7 @@ function addGame(game) {
     let button = document.createElement("button");
     button.id = "bid-button-" + game.id;
     button.innerHTML = "Bid " + game.next_bid;
+    button.onclick = buttonClick.bind(null, game.id);
 
     innerDiv.appendChild(pool);
     innerDiv.appendChild(button);
@@ -50,6 +53,18 @@ function addGame(game) {
 
     let gameDiv = document.getElementById("game-div");
     gameDiv.appendChild(topDiv);
+}
+
+function buttonClick(game_id, click) {
+    console.log(game_id);
+    console.log(game_id, click);
+
+    socket.emit('bid', {
+      "game_id" : game_id,
+      "user_id" : user.id,
+      "session_id" : user.session_id,
+      "bid" : games[game_id].next_bid
+    });
 }
 </script>
 </head>

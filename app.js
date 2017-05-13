@@ -50,25 +50,30 @@ app.get('/', function(req, res) {
 });
 
 let handleBid = function(socket, data) {
-    console.log(data);
+    console.log("bid", data);
     let game = games[data.game_id];
     let user = users[data.user_id];
 
     // Reject bad/outdated bids
-    if (!game || !user
-        || user.session_id !== data.user_session
-        || data.user_id === game.bidder)
+    if (!game
+        || !user
+        || data.session_id !== user.session_id
+        || data.user_id === game.bidder
+        || data.bid !== game.next_bid)
     {
+        console.log("bid_fail", game);
         socket.emit('bid_fail', game);
         return;
     }
 
     // Successful user bid
-    user.coins -= gaame.next_bid;
+    user.coins -= game.next_bid;
     game.pool += game.next_bid;
     game.next_bid += game.increment;
     game.bidder_id = data.user_id;
-    game.bidder_session = data.user_session;
+    game.bidder_session = data.session_id;
+
+    console.log("Bid success", game);
 
     // Broadcast new game state
     let updated_game = createUserGame(game);
@@ -96,5 +101,5 @@ io.on('connection', function (socket) {
         "games" : user_games 
     });
 
-    socket.on('bid', handleBid.bind(socket));
+    socket.on('bid', handleBid.bind(null, socket));
 });
