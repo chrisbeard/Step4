@@ -1,17 +1,58 @@
 <!DOCTYPE html>
 <html>
-    <head>
-    <title>Step4</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-    var socket = io.connect('http://localhost:3000');
-    socket.on('news', function (data) {
-        console.log(data);
-        socket.emit('my other event', { my: 'data' });
-    });
-    </script>
-        <link rel="stylesheet" href="resources/css/style.css">
-    </head>
+
+<head>
+<title>step4</title>
+<link rel="stylesheet" href="resources/css/style.css">
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+// Globals
+var user;
+var games;
+var game_divs = {};
+
+var socket = io.connect('http://localhost:3000');
+socket.on('game_state', function (data) {
+    console.log(data);
+    user = data.user;
+    games = data.games;
+
+    games.forEach(addGame);
+});
+
+function addGame(game) {
+    console.log("adding game", game);
+
+    let topDiv = document.createElement("div");
+    topDiv.id = "game-" + game.id;
+    topDiv.className = "w3-third w3-container w3-margin-bottom";
+
+    let img = document.createElement("img");
+    img.src = "/resources/img/Coin" + game.increment + ".png";
+    img.style = "width:100%";
+
+    let innerDiv = document.createElement("div");
+    innerDiv.className = "w3-container w3-white coin-container";
+
+    let pool = document.createElement("p");
+    pool.id = "pool-" + game.id;
+
+    let button = document.createElement("button");
+    button.id = "bid-button-" + game.id;
+    button.innerHTML = "Bid " + game.next_bid;
+
+    innerDiv.appendChild(pool);
+    innerDiv.appendChild(button);
+
+    topDiv.appendChild(img);
+    topDiv.appendChild(innerDiv);
+
+    let gameDiv = document.getElementById("game-div");
+    gameDiv.appendChild(topDiv);
+}
+</script>
+</head>
 
 <meta charset="UTF-8">
 
@@ -25,31 +66,8 @@
   </header>
   
   <!--Grid-->
-  <div class="w3-row-padding">
-    <div class="w3-third w3-container w3-margin-bottom">
-      <img src="/resources/img/Coin1.png" alt="1 Coin" style="width:100%">
-      <div class="w3-container w3-white coin-container">
-        <p class="price">0 Coin</p>
-
-          <button class="bid-button">Bid 1</button>
-      </div>
-    </div>
-    <div class="w3-third w3-container w3-margin-bottom">
-      <img src="/resources/img/Coin5.png" alt="5 Coins" style="width:100%">
-      <div class="w3-container w3-white coin-container">
-         <p class="price">0 Coins</p>
-        <button class="bid-button">Bid 5</button>
-      </div>
-    </div>
-    <div class="w3-third w3-container">
-      <img src="/resources/img/Coin10.png" alt="10 Coins" style="width:100%">
-      <div class="w3-container w3-white coin-container">
-         <p class="price">0 Coin</p>
-        <button class="bid-button">Bid 10</button>
-      </div>
-    </div>
+  <div id="game-div" class="w3-row-padding">
   </div>
- 
   
   <div class="w3-black w3-center w3-padding-24">Copyright Step4</div>
 
