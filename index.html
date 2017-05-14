@@ -32,6 +32,34 @@ socket.on('game_state', function (data) {
     });
 });
 
+socket.on('user_status', function(status) {
+    console.log("user_status", status);
+    user.coins = status.coins;
+});
+
+socket.on('bid_fail', function(game) {
+    console.log("bid_fail", game);
+});
+
+socket.on('game_update', function(game) {
+    console.log('game_update', game);
+
+    let id = game.id;
+    games[id] = game;
+
+    let pool = document.getElementById("pool-" + id);
+    pool.textContent = "Pool: " + game.pool;
+
+    let bidButton = document.getElementById("bid-button-" + id);
+    if (game.bidder_session === user.session_id) {
+        bidButton.innerHTML = "Top Bidder!";
+        bidButton.onclick = null;
+    } else {
+        bidButton.innerHTML = "Bid " + game.next_bid;
+        bidButton.onclick = buttonClick.bind(null, id);
+    }
+});
+
 function addGame(game) {
     console.log("adding game", game);
 
@@ -69,7 +97,6 @@ function addGame(game) {
 
 function buttonClick(game_id, click) {
     console.log(game_id);
-    console.log(game_id, click);
 
     socket.emit('bid', {
       "game_id" : game_id,

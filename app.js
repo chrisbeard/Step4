@@ -64,10 +64,11 @@ let handleBid = function(socket, data) {
         || !user
         || data.session_id !== user.session_id
         || data.user_id === game.bidder
-        || data.bid !== game.next_bid)
+        || data.bid !== game.next_bid
+        || user.coins < game.next_bid)
     {
         console.log("bid_fail", game);
-        socket.emit('bid_fail', game);
+        socket.emit('bid_fail', createUserGame(game));
         return;
     }
 
@@ -80,9 +81,10 @@ let handleBid = function(socket, data) {
 
     console.log("Bid success", game);
 
-    // Broadcast new game state
+    // Broadcast new game state to all clients
     let updated_game = createUserGame(game);
-    socket.broadcast.emit('game_update', updated_game);
+    io.sockets.emit('game_update', updated_game);
+    // Update user data
     socket.emit('user_status', { "coins" : user.coins });
 };
 
