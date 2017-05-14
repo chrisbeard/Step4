@@ -1,7 +1,10 @@
 "use strict";
-let app = require('express')();
+let express = require('express');
+let app = express();
 let server = require('http').Server(app);
 let io = require('socket.io')(server);
+
+app.use(express.static('resources'))
 
 server.listen(3000);
 
@@ -18,17 +21,17 @@ let games = {
         "id" : "2",
         "bidder_id": null,
         "bidder_session": null,
-        "increment" : 10,
-        "next_bid" : 10,
-        "pool" : 10
+        "increment" : 5,
+        "next_bid" : 5,
+        "pool" : 5
     },
     "3" : {
         "id" : "3",
         "bidder_id": null,
         "bidder_session": null,
-        "increment" : 100,
-        "next_bid" : 100,
-        "pool" : 100
+        "increment" : 10,
+        "next_bid" : 10,
+        "pool" : 10
     }
 };
 
@@ -46,7 +49,9 @@ let users = {};
 
 
 app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile('index.html', {
+        "root" : __dirname
+    });
 });
 
 let handleBid = function(socket, data) {

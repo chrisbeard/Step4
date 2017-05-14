@@ -3,18 +3,27 @@
 
 <head>
 <title>step4</title>
-<link rel="stylesheet" href="resources/css/style.css">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
 // Globals
 var user;
-var games = {};
-var game_divs = {};
+var games;
+var game_divs;
 
 var socket = io.connect('http://localhost:3000');
 socket.on('game_state', function (data) {
     console.log(data);
+
+    // Clear games
+    let gameDiv = document.getElementById("game-div");
+    while (gameDiv.firstChild) {
+        gameDiv.removeChild(gameDiv.firstChild);
+    }
+    games = {};
+    game_divs = {};
 
     user = data.user;
     data.games.forEach(game => {
@@ -31,19 +40,22 @@ function addGame(game) {
     topDiv.className = "w3-third w3-container w3-margin-bottom";
 
     let img = document.createElement("img");
-    img.src = "/resources/img/Coin" + game.increment + ".png";
+    img.src = "/img/Coin" + game.increment + ".png";
     img.style = "width:100%";
 
     let innerDiv = document.createElement("div");
     innerDiv.className = "w3-container w3-white coin-container";
 
     let pool = document.createElement("p");
+    pool.className = "price";
     pool.id = "pool-" + game.id;
+    pool.textContent = "Pool: " + game.pool;
 
     let button = document.createElement("button");
     button.id = "bid-button-" + game.id;
     button.innerHTML = "Bid " + game.next_bid;
     button.onclick = buttonClick.bind(null, game.id);
+    button.className = "bid-button";
 
     innerDiv.appendChild(pool);
     innerDiv.appendChild(button);
@@ -74,7 +86,7 @@ function buttonClick(game_id, click) {
 <body style="max-width:1200px">
   <!-- Header -->
   <header id="portfolio">
-    <a href="#"><img src="resources/img/sign_in_button.png" class="signin"></a>
+    <a href="#"><img src="/img/sign_in_button.png" class="signin"></a>
     <div class="w3-container">
     <h1><b>Step4</b></h1>
     </div>
