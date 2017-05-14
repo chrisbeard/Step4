@@ -23,6 +23,7 @@ let createGame = function(id, increment) {
         "increment": increment,
         "next_bid": increment,
         "pool": increment,
+        "remaining" : null,
         "timer" : null
     };
 };
@@ -33,12 +34,14 @@ let createUserGame = function(game) {
         "bidder_session" : game.bidder_session,
         "increment" : game.increment,
         "next_bid" : game.next_bid,
-        "pool" : game.pool
+        "pool" : game.pool,
+        "remaining" : game.remaining
     };
 };
 
 let endGame = function(game) {
     console.log("endGame");
+    game.remaining = 0;
     io.sockets.emit('game_end', createUserGame(game));
     delete games[game.id];
 };
@@ -75,7 +78,7 @@ let handleBid = function(socket, data) {
         || user.coins < game.next_bid)
     {
         console.log("bid_fail", game);
-        socket.emit('bid_fail', createUserGame(game));
+        socket.emit('bid_fail', game ? createUserGame(game) : null);
         return;
     }
 
@@ -85,12 +88,18 @@ let handleBid = function(socket, data) {
     game.next_bid += game.increment;
     game.bidder_id = data.user_id;
     game.bidder_session = data.session_id;
+    game.remaining = 10;
 
     console.log("Bid success", game);
 
-    if (!game.timer) {
-        game.timer = setTimeout(endGame.bind(null, game), 10000);
+    if (game.timer) {
+        clearTimeout(game.timer);
+        clearInterval(game.decrement)
     }
+    game.timer = setTimeout(endGame.bind(null, game), 10000);
+    game.decrement = setInterval(function() {
+        --game.remaining;
+    }, 1000);
 
     // Broadcast new game state to all clients
     let updated_game = createUserGame(game);

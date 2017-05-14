@@ -42,17 +42,30 @@ socket.on('bid_fail', function(game) {
 });
 
 socket.on('game_end', function(game) {
-    console.log("game_end", game);
+    let id = game.id;
+
+    if (games[id].timer)
+        clearInterval(games[id].timer);
+
+    let timer = document.getElementById("timer-" + id);
+    let bidButton = document.getElementById("bid-button-" + id);
+    bidButton.disabled = true;
+    if (game.bidder_session === user.session_id) {
+        timer.textContent = "You won!";
+    }
+    else {
+        timer.textContent = "Game Over!";
+    }
 });
 
 socket.on('game_update', function(game) {
-    console.log('game_update', game);
-
     let id = game.id;
-    games[id] = game;
 
     let pool = document.getElementById("pool-" + id);
     pool.textContent = "Pool: " + game.pool;
+
+    let timer = document.getElementById("timer-" + id);
+    resetTimer(game, timer);
 
     let bidButton = document.getElementById("bid-button-" + id);
     if (game.bidder_session === user.session_id) {
@@ -62,6 +75,7 @@ socket.on('game_update', function(game) {
         bidButton.innerHTML = "Bid " + game.next_bid;
         bidButton.onclick = buttonClick.bind(null, id);
     }
+    games[id] = game;
 });
 
 function addGame(game) {
@@ -83,6 +97,11 @@ function addGame(game) {
     pool.id = "pool-" + game.id;
     pool.textContent = "Pool: " + game.pool;
 
+    let timer = document.createElement("p");
+    timer.className = "timer";
+    timer.id = "timer-" + game.id;
+    resetTimer(game, timer);
+
     let button = document.createElement("button");
     button.id = "bid-button-" + game.id;
     button.innerHTML = "Bid " + game.next_bid;
@@ -90,6 +109,7 @@ function addGame(game) {
     button.className = "bid-button";
 
     innerDiv.appendChild(pool);
+    innerDiv.appendChild(timer);
     innerDiv.appendChild(button);
 
     topDiv.appendChild(img);
@@ -99,9 +119,27 @@ function addGame(game) {
     gameDiv.appendChild(topDiv);
 }
 
-function buttonClick(game_id, click) {
-    console.log(game_id);
+function resetTimer(game, timer) {
+    if (game.remaining > 0) {
+        timer.textContent = "Remaining: " + game.remaining + "s";
 
+        if (games[game.id].timer)
+            clearInterval(games[game.id].timer);
+
+        game.timer = setInterval(function() {
+            if (game.remaining > 0) {
+                timer.textContent = "Remaining: " + (--game.remaining) + "s";
+            } else {
+                clearInterval(game.timer);
+            }
+        }, 1000);
+    }
+    else {
+        timer.textContent = "Bid to start!";
+    }
+}
+
+function buttonClick(game_id, click) {
     socket.emit('bid', {
       "game_id" : game_id,
       "user_id" : user.id,
