@@ -41,6 +41,10 @@ socket.on('bid_fail', function(game) {
     console.log("bid_fail", game);
 });
 
+socket.on('game_end', function(game) {
+    console.log("game_end", game);
+});
+
 socket.on('game_update', function(game) {
     console.log('game_update', game);
 

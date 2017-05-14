@@ -5,34 +5,26 @@ let server = require('http').Server(app);
 let io = require('socket.io')(server);
 
 app.use(express.static('resources'))
-
 server.listen(3000);
 
-let games = {
-    "1" :  {
-        "id" : "1",
+// Main route
+app.get('/', function(req, res) {
+    res.sendFile('index.html', {
+        "root" : __dirname
+    });
+});
+
+
+let createGame = function(id, increment) {
+    return {
+        "id" : id,
         "bidder_id": null,
         "bidder_session": null,
-        "increment": 1,
-        "next_bid": 1,
-        "pool": 1
-    },
-    "2" : {
-        "id" : "2",
-        "bidder_id": null,
-        "bidder_session": null,
-        "increment" : 5,
-        "next_bid" : 5,
-        "pool" : 5
-    },
-    "3" : {
-        "id" : "3",
-        "bidder_id": null,
-        "bidder_session": null,
-        "increment" : 10,
-        "next_bid" : 10,
-        "pool" : 10
-    }
+        "increment": increment,
+        "next_bid": increment,
+        "pool": increment,
+        "timer" : null
+    };
 };
 
 let createUserGame = function(game) {
@@ -45,14 +37,29 @@ let createUserGame = function(game) {
     };
 };
 
+let endGame = function(game) {
+    console.log("endGame");
+    io.sockets.emit('game_end', createUserGame(game));
+    delete games[game.id];
+};
+
+let last_id = 123;
+let createUser = function() {
+    let new_id = ++last_id;
+    users[new_id] = {
+        "id" : new_id,
+        "session_id" : new_id * 123,
+        "coins" : 1000
+    };
+    return users[new_id];
+};
+
+
 let users = {};
-
-
-app.get('/', function(req, res) {
-    res.sendFile('index.html', {
-        "root" : __dirname
-    });
-});
+let games = {};
+games[1] = createGame(1, 1);
+games[2] = createGame(2, 5);
+games[3] = createGame(3, 10);
 
 let handleBid = function(socket, data) {
     console.log("bid", data);
@@ -81,6 +88,10 @@ let handleBid = function(socket, data) {
 
     console.log("Bid success", game);
 
+    if (!game.timer) {
+        game.timer = setTimeout(endGame.bind(null, game), 10000);
+    }
+
     // Broadcast new game state to all clients
     let updated_game = createUserGame(game);
     io.sockets.emit('game_update', updated_game);
@@ -88,16 +99,6 @@ let handleBid = function(socket, data) {
     socket.emit('user_status', { "coins" : user.coins });
 };
 
-let last_id = 123;
-let createUser = function() {
-    let new_id = ++last_id;
-    users[new_id] = {
-        "id" : new_id,
-        "session_id" : new_id * 123,
-        "coins" : 1000
-    };
-    return users[new_id];
-};
 
 io.on('connection', function (socket) {
     let user = createUser();
